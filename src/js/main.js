@@ -7,7 +7,7 @@
 // Functions and constants from game-logic.js are available as globals:
 //   COLUMNS, ROWS, HIDDEN_ROWS, TOTAL_ROWS, PIECE_COLORS, TETROMINOES,
 //   POINTS_PER_LINES, createBoard, isValidPosition, lockPiece, clearLines,
-//   calculateScore, calculateLevel, getDropInterval, generateBag
+//   calculateScore, calculateLevel, getDropInterval, getGhostRow, generateBag
 // ============================================================
 
 // --- Rendering Constants ---
@@ -21,6 +21,10 @@ const context = canvas.getContext('2d');
 canvas.width = COLUMNS * CELL_SIZE;
 canvas.height = ROWS * CELL_SIZE;
 
+const previewCanvas = document.getElementById('preview-canvas');
+const previewContext = previewCanvas.getContext('2d');
+const PREVIEW_CELL_SIZE = 24;
+
 // --- Game State ---
 const board = createBoard();
 const pieceSequence = [];
@@ -29,13 +33,17 @@ let score = 0;
 let level = 1;
 let totalLinesCleared = 0;
 let dropCounter = 0;
-let gameState = 'start';  // 'start', 'playing', 'gameover'
+let gameState = 'start';  // 'start', 'playing', 'paused', 'gameover'
 
 // --- Piece Spawning (FR-06) ---
-function spawnPiece() {
-    if (pieceSequence.length === 0) {
-        pieceSequence.push(...generateBag());
+function ensureBagHasPieces() {
+    if (pieceSequence.length < 2) {
+        pieceSequence.unshift(...generateBag());
     }
+}
+
+function spawnPiece() {
+    ensureBagHasPieces();
 
     const type = pieceSequence.pop();
     const matrix = TETROMINOES[type][0];
@@ -49,6 +57,13 @@ function spawnPiece() {
         col: col,
         color: PIECE_COLORS[type]
     };
+
+    // Ensure there's always a next piece to preview
+    ensureBagHasPieces();
+}
+
+function getNextPieceType() {
+    return pieceSequence.length > 0 ? pieceSequence[pieceSequence.length - 1] : null;
 }
 
 // --- Renderer ---
@@ -96,6 +111,72 @@ function drawActivePiece() {
     }
 }
 
+// --- Ghost Piece Renderer ---
+function drawGhostPiece() {
+    if (!activePiece) return;
+
+    const ghostRow = getGhostRow(board, activePiece.matrix, activePiece.row, activePiece.col);
+    // Don't draw if ghost is at the same position as the active piece
+    if (ghostRow === activePiece.row) return;
+
+    const matrix = activePiece.matrix;
+    for (let row = 0; row < matrix.length; row++) {
+        for (let col = 0; col < matrix[row].length; col++) {
+            if (matrix[row][col] === 1) {
+                const boardRow = ghostRow + row;
+                const boardCol = activePiece.col + col;
+
+                if (boardRow >= HIDDEN_ROWS) {
+                    const visibleRow = boardRow - HIDDEN_ROWS;
+                    const x = boardCol * CELL_SIZE;
+                    const y = visibleRow * CELL_SIZE;
+
+                    // Draw semi-transparent outline
+                    context.strokeStyle = activePiece.color;
+                    context.globalAlpha = 0.3;
+                    context.fillStyle = activePiece.color;
+                    context.fillRect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+                    context.globalAlpha = 1.0;
+                    context.lineWidth = 1;
+                    context.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
+                }
+            }
+        }
+    }
+}
+
+// --- Next Piece Preview ---
+function drawNextPiecePreview() {
+    previewContext.fillStyle = GRID_BG_COLOR;
+    previewContext.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+    const nextType = getNextPieceType();
+    if (!nextType) return;
+
+    const matrix = TETROMINOES[nextType][0];
+    const color = PIECE_COLORS[nextType];
+
+    // Center the piece in the preview canvas
+    const pieceWidth = matrix[0].length * PREVIEW_CELL_SIZE;
+    const pieceHeight = matrix.length * PREVIEW_CELL_SIZE;
+    const offsetX = Math.floor((previewCanvas.width - pieceWidth) / 2);
+    const offsetY = Math.floor((previewCanvas.height - pieceHeight) / 2);
+
+    for (let row = 0; row < matrix.length; row++) {
+        for (let col = 0; col < matrix[row].length; col++) {
+            if (matrix[row][col] === 1) {
+                const x = offsetX + col * PREVIEW_CELL_SIZE;
+                const y = offsetY + row * PREVIEW_CELL_SIZE;
+                previewContext.fillStyle = color;
+                previewContext.fillRect(x, y, PREVIEW_CELL_SIZE, PREVIEW_CELL_SIZE);
+                previewContext.strokeStyle = GRID_LINE_COLOR;
+                previewContext.lineWidth = 1;
+                previewContext.strokeRect(x, y, PREVIEW_CELL_SIZE, PREVIEW_CELL_SIZE);
+            }
+        }
+    }
+}
+
 function drawStartScreen() {
     context.fillStyle = GRID_BG_COLOR;
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -103,7 +184,7 @@ function drawStartScreen() {
     context.fillStyle = '#00d4ff';
     context.font = 'bold 36px Courier New';
     context.textAlign = 'center';
-    context.fillText('TETRIS', canvas.width / 2, canvas.height / 2 - 40);
+    context.fillText('MK TETRIS', canvas.width / 2, canvas.height / 2 - 40);
 
     context.fillStyle = '#888';
     context.font = '16px Courier New';
@@ -128,6 +209,22 @@ function drawGameOverScreen() {
     context.fillStyle = '#888';
     context.font = '14px Courier New';
     context.fillText('Press ENTER to restart', canvas.width / 2, canvas.height / 2 + 50);
+}
+
+function drawPauseScreen() {
+    drawBoard();
+
+    context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    context.fillStyle = '#f0f000';
+    context.font = 'bold 32px Courier New';
+    context.textAlign = 'center';
+    context.fillText('PAUSED', canvas.width / 2, canvas.height / 2 - 20);
+
+    context.fillStyle = '#888';
+    context.font = '14px Courier New';
+    context.fillText('Press P or ESC to resume', canvas.width / 2, canvas.height / 2 + 20);
 }
 
 // --- UI Updates (FR-18, FR-22) ---
@@ -184,7 +281,18 @@ document.addEventListener('keydown', function(event) {
         return;
     }
 
-    // Gameplay input
+    // Pause toggle (Escape or P)
+    if (event.key === 'Escape' || event.key === 'p' || event.key === 'P') {
+        if (gameState === 'playing') {
+            gameState = 'paused';
+            return;
+        } else if (gameState === 'paused') {
+            gameState = 'playing';
+            return;
+        }
+    }
+
+    // Gameplay input — blocked when not playing
     if (!activePiece || gameState !== 'playing') return;
 
     if (['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
@@ -229,6 +337,8 @@ function gameLoop() {
         drawStartScreen();
     } else if (gameState === 'gameover') {
         drawGameOverScreen();
+    } else if (gameState === 'paused') {
+        drawPauseScreen();
     } else if (gameState === 'playing') {
         dropCounter++;
         if (dropCounter >= getDropInterval(level)) {
@@ -250,7 +360,9 @@ function gameLoop() {
         }
 
         drawBoard();
+        drawGhostPiece();
         drawActivePiece();
+        drawNextPiecePreview();
     }
 
     requestAnimationFrame(gameLoop);

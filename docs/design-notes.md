@@ -1,4 +1,4 @@
-# Tetris Game — Design Notes
+# MK Tetris — Design Notes
 
 ## 1. Architecture Pattern
 
@@ -21,11 +21,14 @@ Layered architecture with clear separation of concerns:
 ## 2. Core Modules
 
 ### 2.1 Game State Machine
-Manages transitions between screens (maps to FR-23 through FR-26):
+Manages transitions between screens (maps to FR-23 through FR-26, FR-37 through FR-40):
 
 ```
 [Start Screen] --press start--> [Playing] --piece can't spawn--> [Game Over]
-     ^                                                                |
+     ^                             |   ^                              |
+     │                          P/Esc  P/Esc                          │
+     │                             v   |                              │
+     │                          [Paused]                              │
      └────────────────────press restart───────────────────────────────┘
 ```
 
@@ -50,15 +53,32 @@ Manages transitions between screens (maps to FR-23 through FR-26):
 - Level advances every 10 lines cleared (FR-19 to FR-21)
 - Drop speed tied to level — faster as levels increase
 
-### 2.6 Input Handler
-- Listens for keyboard events (FR-27 to FR-30)
-- Maps keys to actions: moveLeft, moveRight, moveDown, rotate, start/restart
+### 2.6 Ghost Piece (v2 — FR-31 to FR-33)
+- Pure logic function `getGhostRow(board, matrix, row, col)` in game-logic.js
+- Projects the active piece downward until collision — returns the landing row
+- Renderer draws ghost as semi-transparent fill (30% opacity) with a full-opacity outline
+- Ghost is not drawn when piece is already at landing position (avoids visual clutter)
+- Ghost updates automatically because it's recalculated every render frame
+
+### 2.7 Next Piece Preview (v2 — FR-34 to FR-36)
+- Separate 120×120 canvas (`preview-canvas`) in the UI panel
+- `getNextPieceType()` peeks at the last item in the piece sequence without removing it
+- `ensureBagHasPieces()` guarantees at least 2 pieces in the bag at all times so there's always a next piece to preview
+- Preview draws the piece centered in the canvas using 24px cells
+- Redrawn every frame during gameplay
+
+### 2.8 Input Handler
+- Listens for keyboard events (FR-27 to FR-30, FR-37 to FR-40)
+- Maps keys to actions: moveLeft, moveRight, moveDown, rotate, start/restart, pause/resume
+- P and Escape toggle between 'playing' and 'paused' states
+- All gameplay input is blocked when game state is not 'playing'
 - Does NOT move pieces directly — sends commands to Game Logic
 - Decoupled so touch/gamepad support can be added later (backlog)
 
-### 2.7 Renderer
+### 2.9 Renderer
 - Reads game state and draws it to screen
-- Responsibilities: draw grid, draw active piece, draw locked blocks, draw UI (score, level, lines)
+- Responsibilities: draw grid, draw ghost piece, draw active piece, draw locked blocks, draw next piece preview, draw UI (score, level, lines), draw pause/game-over overlays
+- Draw order during gameplay: board → ghost piece → active piece → preview (ghost drawn first so active piece renders on top)
 - Draw loop synced to browser refresh via `requestAnimationFrame`
 - Renderer never modifies game state — read-only
 
@@ -112,6 +132,8 @@ All decisions are logged with full rationale in `docs/decisions.md`.
 | D-04 | Random bag piece generation | Standard Tetris Guideline — prevents long droughts of needed pieces |
 | D-05 | 2 hidden rows above grid | Allows pieces to spawn off-screen and descend naturally |
 | D-06 | Rotation via matrix lookup (not math) | Pre-defined rotation states are simpler and avoid rotation bugs |
+| D-07 | Half-speed drop intervals | decisions.md D-07 |
+| D-08 | Ghost piece via projection | decisions.md D-08 |
 
 ## 6. Scalability Path
 

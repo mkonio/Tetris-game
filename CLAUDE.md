@@ -1,4 +1,4 @@
-# Tetris Game Project
+# MK Tetris
 
 ## Project Overview
 A browser-based Tetris clone built as a learning project. The goal is to learn Claude AI and Claude Code best practices by building a real, playable game incrementally.
@@ -47,4 +47,5 @@ A browser-based Tetris clone built as a learning project. The goal is to learn C
 - Always explain *what* you're doing and *why* (this is a learning project)
 - After every code change: verify smoke tests pass (open `tests/tests.html`) before considering the change done
 - New features must include tests — add to `tests/game-logic.test.js` for logic, `tests/smoke.test.js` for integration
+- After implementing features: update `docs/requirements.md`, `docs/design-notes.md`, and `docs/decisions.md` to reflect the changes
 - Save all deliverables to the project folder

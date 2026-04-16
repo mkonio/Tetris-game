@@ -1,4 +1,4 @@
-# Tetris Game — Requirements
+# MK Tetris — Requirements
 
 ## 1. Scope
 A browser-based Tetris clone for learning purposes. Single player, no multiplayer, no server-side components.
@@ -9,16 +9,22 @@ A browser-based Tetris clone for learning purposes. Single player, no multiplaye
 - Start screen, game-over screen
 - Keyboard controls
 
-### 1.2 Out of Scope (v1)
+### 1.2 In Scope (v2)
 - Ghost piece (landing preview)
 - Next piece preview
+- Pause/resume
+- Key bindings display in UI
+- Half-speed level progression (relaxed pace)
+- Renamed to MK Tetris
+
+### 1.3 Out of Scope (current)
 - Hold piece
+- Hard drop (instant placement)
 - Sound effects and animations
 - Mobile/touch controls
 - High score persistence
-- Pause/resume
 
-> Out-of-scope items may be added in future versions after v1 is complete and working.
+> Out-of-scope items may be added in future versions.
 
 ## 2. Functional Requirements
 
@@ -68,6 +74,28 @@ A browser-based Tetris clone for learning purposes. Single player, no multiplaye
 - FR-29: Up arrow key — rotate piece clockwise
 - FR-30: Enter/Space — start game / restart after game over
 
+### 2.9 Ghost Piece (v2)
+- FR-31: A semi-transparent "ghost" of the active piece is shown at its landing position
+- FR-32: Ghost updates instantly when the player moves or rotates the piece
+- FR-33: Ghost is not drawn when the piece is already at the landing position
+
+### 2.10 Next Piece Preview (v2)
+- FR-34: A preview panel shows the next piece that will spawn
+- FR-35: Preview updates after each piece spawn
+- FR-36: Preview displays the piece centered in its own canvas, using the piece's color
+
+### 2.11 Pause/Resume (v2)
+- FR-37: Player can pause the game by pressing P or Escape
+- FR-38: While paused, gameplay freezes — no piece movement, no input except unpause
+- FR-39: Pause screen overlays the board with "PAUSED" text and resume instructions
+- FR-40: Pressing P or Escape while paused resumes gameplay
+
+### 2.12 Key Bindings Display (v2)
+- FR-41: The UI panel displays all key bindings (move, rotate, soft drop, pause, start)
+
+### 2.13 Speed (v2)
+- FR-42: Drop speeds are halved compared to classic NES Tetris (doubled frame intervals) for a more relaxed pace
+
 ## 3. Non-Functional Requirements
 - NFR-01: Runs in any modern browser (Chrome, Firefox, Edge, Safari)
 - NFR-02: No external game engines or heavyweight frameworks
@@ -105,9 +133,7 @@ A browser-based Tetris clone for learning purposes. Single player, no multiplaye
 - BL-20: API authentication — player identity for statistics tracking
 
 ### 4.4 Other Backlog Items
-- Next piece preview panel
 - Hold piece mechanic
 - Hard drop (instant placement)
-- Pause/resume
 - Sound effects and line-clear animations
 - High score persistence (localStorage initially, then via API)

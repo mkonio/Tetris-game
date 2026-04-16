@@ -1,4 +1,4 @@
-# Tetris Game — Decisions Log
+# MK Tetris — Decisions Log
 
 ## D-01: Tech Stack — Vanilla HTML/CSS/JS + Canvas
 
@@ -101,3 +101,44 @@ When photos and statistics features are needed, add a backend API layer. Candida
 - Game modules remain unchanged — add a thin API client module that fetches photos and posts statistics
 - Photo layer in the target area mechanic reads from API instead of local assets
 - Statistics module collects gameplay data and sends to API on game over
+
+---
+
+## D-07: Drop Speed — Half-Speed (Relaxed Pace)
+
+**Date:** 2026-04-16
+**Status:** Decided
+
+### Decision
+Double all NES Tetris drop intervals (level 1: 48→96 frames, level 20: 2→4 frames) for a more relaxed gameplay pace.
+
+### Rationale
+- The game is a learning project, not a competitive Tetris clone — accessibility matters more than tournament-level speed
+- Classic NES speeds feel punishing for casual play, especially at higher levels
+- The relative speed curve is preserved — each level still feels noticeably faster than the previous one
+- Easy to revert or make configurable later if a "classic speed" option is desired
+
+### Consequences
+- Level 1 test updated from 48 to 96 frames expectation
+- Higher levels remain challenging but more playable (level 10 = 12 frames instead of 6)
+
+---
+
+## D-08: Ghost Piece — Drop Projection via Pure Function
+
+**Date:** 2026-04-16
+**Status:** Decided
+
+### Decision
+Implement ghost piece as a pure function `getGhostRow()` in game-logic.js that projects the active piece downward until collision. Renderer draws the ghost as a semi-transparent fill at the projected position.
+
+### Rationale
+- Pure function keeps the ghost piece testable without rendering — consistent with the layered architecture (D-02)
+- Reuses existing `isValidPosition()` for projection — no new collision logic needed
+- Semi-transparent rendering (30% alpha fill + full-opacity outline) gives clear visual feedback without obscuring the board
+- Ghost is recalculated every frame, so it always reflects the current piece position — no state synchronization needed
+
+### Consequences
+- Adds ~8 lines to game-logic.js, ~30 lines to main.js renderer
+- Ghost draw happens before active piece draw so the solid piece always renders on top
+- `getGhostRow` exported to window.TetrisLogic for testability

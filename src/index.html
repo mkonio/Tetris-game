@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tetris Game</title>
+    <title>MK Tetris</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
         <div id="ui-panel">
-            <h1 id="game-title">TETRIS</h1>
+            <h1 id="game-title">MK TETRIS</h1>
+            <div class="ui-stat">
+                <span class="ui-label">Next</span>
+                <canvas id="preview-canvas" width="120" height="120"></canvas>
+            </div>
             <div class="ui-stat">
                 <span class="ui-label">Score</span>
                 <span id="score-display">0</span>
@@ -22,6 +26,14 @@
             <div class="ui-stat">
                 <span class="ui-label">Lines</span>
                 <span id="lines-display">0</span>
+            </div>
+            <div id="controls-panel">
+                <span class="ui-label">Controls</span>
+                <div class="key-binding"><kbd>&larr;</kbd><kbd>&rarr;</kbd> Move</div>
+                <div class="key-binding"><kbd>&darr;</kbd> Soft drop</div>
+                <div class="key-binding"><kbd>&uarr;</kbd> Rotate</div>
+                <div class="key-binding"><kbd>P</kbd> / <kbd>Esc</kbd> Pause</div>
+                <div class="key-binding"><kbd>Enter</kbd> Start</div>
             </div>
         </div>
     </div>

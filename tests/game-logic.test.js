@@ -244,8 +244,41 @@ T.test('FR-21: Speed increases with level', function() {
     T.assertTrue(speed5 > speed10, 'Level 10 should be faster than level 5');
 });
 
-T.test('Level 1 drop interval is 48 frames', function() {
-    T.assertEqual(G.getDropInterval(1), 48, 'Level 1 = 48 frames');
+T.test('Level 1 drop interval is 96 frames (half-speed)', function() {
+    T.assertEqual(G.getDropInterval(1), 96, 'Level 1 = 96 frames');
+});
+
+// ===================
+// Ghost Piece
+// ===================
+T.suite('Ghost Piece');
+
+T.test('Ghost drops to bottom on empty board', function() {
+    const board = G.createBoard();
+    const matrix = G.TETROMINOES.O[0]; // 2x2
+    const ghostRow = G.getGhostRow(board, matrix, 0, 4);
+    // O-piece is 2 rows tall, board is 22 total rows — ghost lands at row 20
+    T.assertEqual(ghostRow, G.TOTAL_ROWS - 2, 'Ghost O should land at row 20');
+});
+
+T.test('Ghost stops above locked blocks', function() {
+    const board = G.createBoard();
+    // Fill row 21 (bottom) with locked blocks
+    for (let c = 0; c < G.COLUMNS; c++) {
+        board[G.TOTAL_ROWS - 1][c] = '#ff0000';
+    }
+    const matrix = G.TETROMINOES.O[0];
+    const ghostRow = G.getGhostRow(board, matrix, 0, 4);
+    // O-piece should stop one row above the filled row
+    T.assertEqual(ghostRow, G.TOTAL_ROWS - 3, 'Ghost O should stop above locked row');
+});
+
+T.test('Ghost row equals current row when piece is already at landing position', function() {
+    const board = G.createBoard();
+    const matrix = G.TETROMINOES.O[0];
+    const bottomRow = G.TOTAL_ROWS - 2;
+    const ghostRow = G.getGhostRow(board, matrix, bottomRow, 4);
+    T.assertEqual(ghostRow, bottomRow, 'Ghost should be at same row when already landed');
 });
 
 // ===================

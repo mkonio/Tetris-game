@@ -122,10 +122,20 @@ function calculateLevel(totalLinesCleared) {
 }
 
 // --- Drop Speed (FR-21) ---
+// Speeds are doubled (slower) compared to classic NES Tetris for a more relaxed pace
 function getDropInterval(level) {
-    const speeds = [48, 43, 38, 33, 28, 23, 18, 13, 8, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2];
+    const speeds = [96, 86, 76, 66, 56, 46, 36, 26, 16, 12, 10, 10, 10, 8, 8, 8, 6, 6, 6, 4];
     const index = Math.min(level - 1, speeds.length - 1);
     return speeds[index];
+}
+
+// --- Ghost Piece (drop projection) ---
+function getGhostRow(board, matrix, row, col) {
+    let ghostRow = row;
+    while (isValidPosition(board, matrix, ghostRow + 1, col)) {
+        ghostRow++;
+    }
+    return ghostRow;
 }
 
 // --- Bag System (D-04) ---
@@ -145,6 +155,6 @@ if (typeof window !== 'undefined') {
         COLUMNS, ROWS, HIDDEN_ROWS, TOTAL_ROWS,
         PIECE_COLORS, POINTS_PER_LINES, TETROMINOES,
         createBoard, isValidPosition, lockPiece, clearLines,
-        calculateScore, calculateLevel, getDropInterval, generateBag
+        calculateScore, calculateLevel, getDropInterval, getGhostRow, generateBag
     };
 }
