@@ -1,0 +1,36 @@
+/* Tetris Game Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#game-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+#game-canvas {
+    border: 2px solid #444;
+    background-color: #0f0f23;
+}
+
+#ui-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    font-size: 18px;
+}
