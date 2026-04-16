@@ -46,6 +46,7 @@ T.test('game-logic.js exposes TetrisLogic on window', function() {
     T.assertTrue(typeof window.TetrisLogic.isValidPosition === 'function', 'isValidPosition should be a function');
     T.assertTrue(typeof window.TetrisLogic.clearLines === 'function', 'clearLines should be a function');
     T.assertTrue(typeof window.TetrisLogic.getGhostRow === 'function', 'getGhostRow should be a function');
+    T.assertTrue(typeof window.TetrisLogic.calculateHardDropScore === 'function', 'calculateHardDropScore should be a function');
 });
 
 T.test('All expected globals from game-logic.js are accessible', function() {
@@ -64,5 +65,6 @@ T.test('All expected globals from game-logic.js are accessible', function() {
     T.assertTrue(typeof calculateLevel === 'function', 'calculateLevel should be a function');
     T.assertTrue(typeof getDropInterval === 'function', 'getDropInterval should be a function');
     T.assertTrue(typeof getGhostRow === 'function', 'getGhostRow should be a function');
+    T.assertTrue(typeof calculateHardDropScore === 'function', 'calculateHardDropScore should be a function');
     T.assertTrue(typeof generateBag === 'function', 'generateBag should be a function');
 });

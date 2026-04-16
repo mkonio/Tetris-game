@@ -142,3 +142,97 @@ Implement ghost piece as a pure function `getGhostRow()` in game-logic.js that p
 - Adds ~8 lines to game-logic.js, ~30 lines to main.js renderer
 - Ghost draw happens before active piece draw so the solid piece always renders on top
 - `getGhostRow` exported to window.TetrisLogic for testability
+
+---
+
+## D-09: Touch Controls — Buttons Over Swipe Gestures
+
+**Date:** 2026-04-16
+**Status:** Decided
+
+### Decision
+Use on-screen tap buttons for mobile touch controls rather than swipe gestures.
+
+### Options Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| **Tap buttons** | Discrete actions, no ambiguity, immediate response, accessible, matches official Tetris Mobile | Buttons take screen space, less "natural" feel |
+| Swipe gestures | No visible UI clutter, feels native on mobile | Ambiguous diagonals, misinterpretation risk, poor for rapid repeated inputs (e.g., 3× left), continuous finger contact required |
+| Hybrid (swipe + buttons) | Flexible, user choice | Complex implementation, confusing UX, harder to test |
+
+### Rationale
+- Research shows swipe gestures have a fundamental ambiguity problem for grid-based games — a slightly diagonal swipe gets misinterpreted as the wrong direction
+- Rapid repeated moves (left-left-left) require lifting and re-swiping, which is slower than tapping a button 3 times
+- Official Tetris Mobile uses buttons as the primary control scheme, validating this approach
+- Buttons are DOM elements — they get native touch feedback, accessibility support, and CSS styling for free
+- Buttons can be shown/hidden based on device capability detection, keeping the desktop experience clean
+
+### Consequences
+- Touch buttons are hidden on desktop via `'ontouchstart' in window` detection
+- Button area consumes ~120px of screen height on mobile — layout must account for this
+- All touch handlers use `touchstart` (not `click`) to avoid the ~300ms mobile click delay
+- Left/right buttons support hold-to-repeat at ~100ms intervals for smooth movement
+
+### Sources
+- [MDN: Mobile touch controls](https://developer.mozilla.org/en-US/docs/Games/Techniques/Control_mechanisms/Mobile_touch)
+- [Tetris Mobile official controls](https://playstudios.helpshift.com/hc/en/16-tetris-mobile/faq/2944-tetris-controls/)
+- [Touch Control Design — Mobile Free To Play](https://mobilefreetoplay.com/touch-control-design-less-is-more/)
+
+---
+
+## D-10: Responsive Canvas — Dynamic Cell Sizing
+
+**Date:** 2026-04-16
+**Status:** Decided
+
+### Decision
+Calculate `CELL_SIZE` dynamically from available viewport space instead of using a fixed 30px value. Canvas dimensions are derived from cell size × grid dimensions.
+
+### Options Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| **Dynamic cell size** | Works at any resolution, sharp on all screens, no horizontal scroll on small phones | Slightly more complex rendering setup, must recalculate on resize |
+| CSS transform scaling | Simple — scale a fixed canvas with CSS | Blurry on non-integer scales, doesn't help with layout reflow |
+| Fixed canvas + scroll | Zero effort | Terrible mobile UX, unusable |
+
+### Rationale
+- The game grid has a fixed aspect ratio (1:2 for 10×20), so fitting it to any screen is just a matter of finding the largest cell size that fits
+- CSS transform scaling causes blurriness because the canvas bitmap is stretched — dynamic sizing keeps the canvas crisp at native resolution
+- `window.devicePixelRatio` is used to render at the display's native resolution while keeping CSS dimensions at logical size
+- A `resize` event listener (debounced) handles window resizing and orientation changes
+- Layout switches from row (desktop) to column (mobile portrait) via CSS flexbox and a media query at 600px breakpoint
+
+### Consequences
+- `CELL_SIZE` is no longer a constant — it's recalculated on init and resize
+- `PREVIEW_CELL_SIZE` is also derived proportionally
+- All drawing functions already use `CELL_SIZE` as a multiplier, so the rendering code changes are minimal
+- Canvas width/height attributes and CSS dimensions are set separately for DPI support
+
+### Sources
+- [Responsive HTML5 Canvas — DEV Community](https://dev.to/georgedoescode/html5-canvas-responsive-2keh)
+- [Scaling HTML5 Canvas — Code Theory](https://codetheory.in/scaling-your-html5-canvas-to-fit-different-viewports-or-resolutions/)
+- [Auto-Resizing HTML5 Games — web.dev](https://web.dev/case-studies/gopherwoord-studios-resizing-html5-games)
+
+---
+
+## D-11: Browser Mobile-First, Defer Capacitor
+
+**Date:** 2026-04-16
+**Status:** Decided
+
+### Decision
+Implement mobile support as a responsive browser experience first. Defer Capacitor native packaging until the browser mobile version is stable and proven.
+
+### Rationale
+- A responsive web app is immediately testable on any phone — no build pipeline, no app store, no provisioning profiles
+- Capacitor adds build complexity (npm, node_modules, platform SDKs, Xcode/Android Studio) that isn't justified until we know the mobile game plays well
+- If the browser mobile experience is good enough, Capacitor may not even be needed — the game can be saved as a PWA or home screen shortcut
+- All Capacitor requires is a working web app — building a good one first means the Capacitor wrapper is trivial when the time comes
+- This is consistent with the project's "no premature optimization" principle (CLAUDE.md)
+
+### Consequences
+- No npm or build tooling added in v3 — the game remains "open index.html to play"
+- Mobile testing is done in browser DevTools (device emulation) and on real phones via local network or file sharing
+- Capacitor remains in the backlog (BL-13) for future consideration

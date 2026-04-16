@@ -6,17 +6,19 @@ Layered architecture with clear separation of concerns:
 
 ```
 ┌─────────────────────────────────┐
-│         Input Handler           │  Captures keyboard events
+│  Input Handler (keyboard+touch) │  Captures keyboard & touch events
 ├─────────────────────────────────┤
-│         Game State Machine      │  Controls flow: Start → Playing → Game Over
+│         Game State Machine      │  Controls flow: Start → Playing → Paused → Game Over
 ├─────────────────────────────────┤
 │         Game Logic              │  Board, pieces, collision, scoring, levels
 ├─────────────────────────────────┤
-│         Renderer                │  Draws game state to screen
+│     Renderer (responsive)       │  Draws game state to scaled canvas
+├─────────────────────────────────┤
+│     Layout Manager (v3)         │  Scales canvas, repositions UI for viewport
 └─────────────────────────────────┘
 ```
 
-**Why this pattern:** Keeps game logic testable without rendering. Renderer can be swapped (Canvas, DOM, etc.) without touching game rules. Input is decoupled — easy to add touch controls later.
+**Why this pattern:** Keeps game logic testable without rendering. Renderer can be swapped (Canvas, DOM, etc.) without touching game rules. Input is decoupled — keyboard and touch handlers emit the same commands. Layout Manager handles responsive scaling independently of game logic.
 
 ## 2. Core Modules
 
@@ -82,6 +84,108 @@ Manages transitions between screens (maps to FR-23 through FR-26, FR-37 through 
 - Draw loop synced to browser refresh via `requestAnimationFrame`
 - Renderer never modifies game state — read-only
 
+### 2.10 Hard Drop (v3 — FR-43 to FR-46)
+- Pure logic function `hardDrop(board, piece)` in game-logic.js — reuses `getGhostRow()` to find landing position
+- Moves piece instantly to ghost row, locks immediately (no lock delay)
+- Awards 2 points per row dropped (distance between current row and ghost row)
+- Triggered by Space key on keyboard, dedicated touch button on mobile
+- Space key is reassigned from start/restart — Enter becomes the sole start/restart key
+
+### 2.11 Responsive Canvas (v3 — FR-47 to FR-50)
+
+**Scaling strategy:** Calculate `CELL_SIZE` dynamically from available viewport space rather than using a fixed 30px. The game grid aspect ratio (1:2) is always preserved.
+
+```
+On resize / orientation change:
+  1. Measure available space (viewport minus UI margins)
+  2. Calculate max cell size that fits: min(availWidth / COLUMNS, availHeight / ROWS)
+  3. Resize canvas: width = cellSize × COLUMNS, height = cellSize × ROWS
+  4. Re-render immediately
+```
+
+**Layout modes:**
+- **Desktop (wide viewport):** Canvas left, UI panel right (current layout)
+- **Mobile portrait (narrow viewport, < 600px):** Canvas on top, UI panel + touch controls below. CSS flexbox switches from `row` to `column` direction.
+
+**Device pixel ratio:** Canvas internal resolution is multiplied by `window.devicePixelRatio` for sharp rendering on high-DPI screens, while CSS dimensions match the logical size. Context is scaled accordingly.
+
+**Resize handling:** A single `resize` event listener (debounced) recalculates cell size, resizes canvas, and triggers a re-render. The `orientationchange` event is also handled for mobile rotation.
+
+### 2.12 Touch Controls (v3 — FR-51 to FR-55)
+
+**Approach: on-screen buttons (not gestures)**
+
+Based on research, tap buttons are more reliable than swipe gestures for Tetris:
+- Swipe gestures have ambiguity (is a diagonal swipe a move or a drop?)
+- Swipe requires continuous finger contact — awkward for rapid left/left/left moves
+- Buttons provide clear, discrete actions with no misinterpretation
+- Official Tetris Mobile uses buttons as primary control scheme
+
+**Button layout:**
+```
+┌─────────────────────────────────────┐
+│          [  GAME CANVAS  ]          │
+│                                     │
+├─────────────────────────────────────┤
+│  Next / Hold / Score / Level / Lines│
+├─────────────────────────────────────┤
+│                                     │
+│   [ ◀ ]   [ ▶ ]      [ ⟳ ]  [HOLD]│
+│         [ ▼ ]        [ ⏬ ] [PAUSE]│
+│                                     │
+└─────────────────────────────────────┘
+```
+Left cluster: directional (left, right, soft drop). Right cluster: actions (rotate, hard drop, hold, pause).
+
+**Implementation:**
+- Buttons are DOM elements (not canvas-drawn) — benefits from native touch feedback, accessibility, and CSS styling
+- CSS grid or flexbox layout for the button area
+- Each button dispatches the same game commands as keyboard — no separate code path for touch vs keyboard
+- Buttons are shown/hidden based on touch capability detection: `'ontouchstart' in window || navigator.maxTouchPoints > 0`
+- All touch handlers call `event.preventDefault()` to block scroll/zoom
+- Minimum touch target size: 44×44px (Apple Human Interface Guidelines)
+
+**Touch event handling:**
+- Use `touchstart` (not `click`) for immediate response — `click` has ~300ms delay on mobile
+- Use `touchend` to detect release
+- For soft drop: `touchstart` begins rapid descent, `touchend` stops it
+- Repeat-on-hold for left/right: when button is held, trigger repeated moves at ~100ms intervals
+
+### 2.13 Mobile Viewport (v3 — FR-56 to FR-58)
+
+**Meta tags:**
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+```
+
+**CSS protections:**
+```css
+body {
+    touch-action: none;          /* Prevent browser gestures */
+    -webkit-user-select: none;   /* Prevent text selection */
+    user-select: none;
+    overscroll-behavior: none;   /* Prevent pull-to-refresh */
+}
+```
+
+**Fullscreen:** On mobile, the game should use all available vertical space. Use `100dvh` (dynamic viewport height) to account for browser chrome that appears/disappears on scroll.
+
+### 2.14 Hold Piece (v3 stretch goal — FR-59 to FR-63)
+
+**State:**
+- `heldPiece`: stores the type of the held piece (or null)
+- `holdUsedThisTurn`: boolean flag, resets to false when a new piece spawns
+
+**Logic (pure function in game-logic.js):**
+- If no piece is held: stash active piece type, spawn next piece from bag
+- If a piece is held: swap active piece with held piece, reset position to spawn point
+- Set `holdUsedThisTurn = true` — prevents infinite swapping
+
+**UI:**
+- Hold piece displayed in a preview canvas, identical in style to the "Next" preview
+- Positioned above or below the "Next" preview in the UI panel
+- On mobile: shown in the stats bar between canvas and touch controls
+
 ## 3. Game Loop
 
 ```
@@ -134,30 +238,35 @@ All decisions are logged with full rationale in `docs/decisions.md`.
 | D-06 | Rotation via matrix lookup (not math) | Pre-defined rotation states are simpler and avoid rotation bugs |
 | D-07 | Half-speed drop intervals | decisions.md D-07 |
 | D-08 | Ghost piece via projection | decisions.md D-08 |
+| D-09 | Touch buttons over swipe gestures | decisions.md D-09 |
+| D-10 | Dynamic cell sizing for responsive canvas | decisions.md D-10 |
+| D-11 | Browser mobile-first, defer Capacitor | decisions.md D-11 |
 
 ## 6. Scalability Path
 
 The architecture is designed so that v1 works standalone, but future features slot in without restructuring:
 
 ```
-v1 (browser, standalone)          Future additions
-─────────────────────────         ──────────────────────────
-Input Handler (keyboard)    →     + Touch Input Handler (BL-14)
-Game Logic (pure JS)        →     unchanged
-Renderer (Canvas)           →     + Photo Layer, Cover/Mask Layer (BL-01–BL-12)
-                                  + API Client module (BL-16–BL-20)
-Web app (open index.html)   →     + Capacitor wrapper for mobile (BL-13)
+v1-v2 (browser, keyboard)         v3 (browser, mobile)              Future
+─────────────────────────         ──────────────────────────        ──────────────────
+Input Handler (keyboard)    →     + Touch Input Handler              unchanged
+Game Logic (pure JS)        →     + hardDrop(), holdPiece()          + Photo mechanic
+Renderer (Canvas, fixed)    →     Responsive (dynamic cell size)     + Photo/Mask layers
+Static layout               →     + Layout Manager (flex reflow)     unchanged
+Web app (desktop browser)   →     + Mobile browser (viewport/CSS)    + Capacitor (BL-13)
+                                                                     + API Client (BL-16–BL-20)
 ```
 
 ### 6.1 What we build now with the future in mind
 - **No framework lock-in:** Pure JS modules, portable anywhere
 - **No browser-only APIs in game logic:** Game logic operates on data structures, not DOM/Canvas directly — keeps it testable and portable
 - **Renderer is read-only:** Adding a photo layer or mask layer later means extending the renderer, not rewriting it
-- **Input handler is decoupled:** Adding touch controls = adding a new input handler that emits the same commands
+- **Input handler is decoupled:** Keyboard and touch handlers emit the same commands — game logic doesn't know or care which input source is active
+- **Dynamic sizing (v3):** Cell size is calculated, not hardcoded — works at any resolution, which directly benefits the Capacitor path later
 
 ### 6.2 What we intentionally defer
+- No Capacitor packaging until browser mobile is proven and stable
 - No API client code until backend exists
-- No touch input until mobile version is scoped
 - No photo/mask rendering until the target area mechanic is designed in detail
 
 ## 7. Future Design Considerations
@@ -170,12 +279,13 @@ Will require:
 - Conflict handling: line clears that intersect the target area reset that progress (BL-08, BL-09)
 - Win condition: all areas revealed = game complete (BL-11)
 
-### 7.2 Mobile App (BL-13 to BL-15)
-Will require:
+### 7.2 Native Mobile App (BL-13 — deferred)
+Browser mobile support (touch controls, responsive canvas) is handled in v3. Capacitor packaging for native app stores will require:
 - Capacitor project setup wrapping the existing web app
-- Touch input handler (swipe/tap gestures mapped to game commands)
-- Responsive Canvas scaling for varying screen sizes
+- Build pipeline for iOS/Android
+- App store configuration and assets (icons, splash screens)
 - Testing on actual devices
+- Prerequisites: v3 browser mobile must be stable first
 
 ### 7.3 Backend API (BL-16 to BL-20)
 Will require:

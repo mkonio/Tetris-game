@@ -1,8 +1,9 @@
 // ============================================================
-// Tetris Game Logic — Unit Tests
+// MK Tetris — Game Logic Unit Tests
 // ============================================================
 // Tests pure game logic functions from game-logic.js
-// Covers: board, collision, line clearing, scoring, levels, bag
+// Covers: board, collision, line clearing, scoring, levels,
+//         ghost piece, hard drop, bag system
 // ============================================================
 
 const T = TestRunner;
@@ -279,6 +280,38 @@ T.test('Ghost row equals current row when piece is already at landing position',
     const bottomRow = G.TOTAL_ROWS - 2;
     const ghostRow = G.getGhostRow(board, matrix, bottomRow, 4);
     T.assertEqual(ghostRow, bottomRow, 'Ghost should be at same row when already landed');
+});
+
+// ===================
+// Hard Drop Score
+// ===================
+T.suite('Hard Drop Score');
+
+T.test('FR-46: Hard drop awards 2 points per row dropped', function() {
+    T.assertEqual(G.calculateHardDropScore(0, 10), 20, 'Dropping 10 rows = 20 points');
+    T.assertEqual(G.calculateHardDropScore(0, 20), 40, 'Dropping 20 rows = 40 points');
+    T.assertEqual(G.calculateHardDropScore(5, 5), 0, 'Dropping 0 rows = 0 points');
+});
+
+T.test('FR-46: Hard drop score is never negative', function() {
+    T.assertEqual(G.calculateHardDropScore(10, 5), 0, 'Should return 0 if ghostRow < currentRow');
+});
+
+T.test('FR-43: getGhostRow gives correct hard drop target', function() {
+    const board = G.createBoard();
+    const matrix = G.TETROMINOES.I[0]; // horizontal I-piece, 4 wide
+    const ghostRow = G.getGhostRow(board, matrix, 0, 3);
+    // I-piece rotation 0 has filled cells in row 1 of the matrix (4 tall matrix)
+    // So ghost lands when matrix row 1 is at TOTAL_ROWS-1, meaning ghostRow = TOTAL_ROWS - 1 - 1 = 20
+    // Actually: I[0] is [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]] — 4 rows tall
+    // Piece bottom occupied row is row index 1 in matrix
+    // ghostRow + 1 = TOTAL_ROWS (first invalid) means ghostRow can go up to where row+3 < TOTAL_ROWS
+    // The piece occupies row ghostRow+1. It's valid while ghostRow+1+row < TOTAL_ROWS for all filled cells
+    // Matrix row 1 has the blocks. ghostRow+1 must be < TOTAL_ROWS → ghostRow < TOTAL_ROWS-1 → ghostRow = 21-1 = 20
+    // But isValidPosition checks ghostRow+1: at ghostRow=20, row 1 maps to boardRow 21 which is TOTAL_ROWS-1 (valid)
+    // At ghostRow=21, row 1 maps to boardRow 22 which is >= TOTAL_ROWS (invalid)
+    // So ghostRow should be 20
+    T.assertEqual(ghostRow, 20, 'I-piece should land at row 20 on empty board');
 });
 
 // ===================

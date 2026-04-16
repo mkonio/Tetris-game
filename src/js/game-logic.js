@@ -1,5 +1,5 @@
 // ============================================================
-// Tetris Game — Pure Game Logic (no DOM, no Canvas)
+// MK Tetris — Pure Game Logic (no DOM, no Canvas)
 // ============================================================
 // Extracted for testability. These functions operate on data only.
 // ============================================================
@@ -138,6 +138,12 @@ function getGhostRow(board, matrix, row, col) {
     return ghostRow;
 }
 
+// --- Hard Drop Score (FR-46) ---
+// Awards 2 points per row dropped
+function calculateHardDropScore(currentRow, ghostRow) {
+    return Math.max(0, (ghostRow - currentRow) * 2);
+}
+
 // --- Bag System (D-04) ---
 function generateBag() {
     const pieces = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
@@ -155,6 +161,7 @@ if (typeof window !== 'undefined') {
         COLUMNS, ROWS, HIDDEN_ROWS, TOTAL_ROWS,
         PIECE_COLORS, POINTS_PER_LINES, TETROMINOES,
         createBoard, isValidPosition, lockPiece, clearLines,
-        calculateScore, calculateLevel, getDropInterval, getGhostRow, generateBag
+        calculateScore, calculateLevel, getDropInterval,
+        getGhostRow, calculateHardDropScore, generateBag
     };
 }

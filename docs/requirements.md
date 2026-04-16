@@ -17,12 +17,17 @@ A browser-based Tetris clone for learning purposes. Single player, no multiplaye
 - Half-speed level progression (relaxed pace)
 - Renamed to MK Tetris
 
-### 1.3 Out of Scope (current)
-- Hold piece
-- Hard drop (instant placement)
+### 1.3 In Scope (v3)
+- Responsive canvas — scales to fit any screen while maintaining aspect ratio
+- Touch controls — on-screen buttons for mobile play
+- Hard drop — instant placement (prerequisite for usable mobile play)
+- Mobile viewport — prevent zoom, prevent scroll during gameplay
+- Hold piece (stretch goal — natural pairing with new controls)
+
+### 1.4 Out of Scope (current)
 - Sound effects and animations
-- Mobile/touch controls
 - High score persistence
+- Capacitor native app packaging (deferred — browser mobile-first)
 
 > Out-of-scope items may be added in future versions.
 
@@ -72,7 +77,7 @@ A browser-based Tetris clone for learning purposes. Single player, no multiplaye
 - FR-27: Left/Right arrow keys — move piece horizontally
 - FR-28: Down arrow key — accelerate piece descent (soft drop)
 - FR-29: Up arrow key — rotate piece clockwise
-- FR-30: Enter/Space — start game / restart after game over
+- FR-30: Enter — start game / restart after game over (Note: Space was removed as start/restart in v3 to avoid conflict with hard drop — see FR-44)
 
 ### 2.9 Ghost Piece (v2)
 - FR-31: A semi-transparent "ghost" of the active piece is shown at its landing position
@@ -96,13 +101,46 @@ A browser-based Tetris clone for learning purposes. Single player, no multiplaye
 ### 2.13 Speed (v2)
 - FR-42: Drop speeds are halved compared to classic NES Tetris (doubled frame intervals) for a more relaxed pace
 
+### 2.14 Hard Drop (v3)
+- FR-43: Player can instantly drop the active piece to its ghost position and lock it
+- FR-44: Hard drop is triggered by Space key on keyboard
+- FR-45: Hard drop locks the piece immediately — no lock delay
+- FR-46: Score awards 2 points per row dropped via hard drop (standard Tetris scoring)
+
+### 2.15 Responsive Canvas (v3)
+- FR-47: Game canvas scales to fit the viewport while maintaining 1:2 aspect ratio (10×20 grid)
+- FR-48: UI panel repositions below the canvas on narrow screens (portrait/mobile)
+- FR-49: Canvas re-scales on window resize and orientation change
+- FR-50: Cell size is calculated dynamically from available space — no fixed pixel size on mobile
+
+### 2.16 Touch Controls (v3)
+- FR-51: On-screen control buttons appear on touch-capable devices
+- FR-52: Touch buttons for: left, right, rotate, soft drop, hard drop, hold, pause
+- FR-53: Touch buttons are hidden on desktop (keyboard-only devices)
+- FR-54: Touch buttons are large enough for comfortable thumb tapping (minimum 44×44px per Apple HIG)
+- FR-55: Touch input calls `preventDefault()` to block browser scroll/zoom during gameplay
+
+### 2.17 Mobile Viewport (v3)
+- FR-56: Viewport meta tag prevents user scaling and sets width to device-width
+- FR-57: CSS disables text selection, touch callouts, and overscroll on the game container
+- FR-58: Game fills available screen height on mobile — no wasted space above/below
+
+### 2.18 Hold Piece (v3 — stretch goal)
+- FR-59: Player can stash the active piece into a "hold" slot and receive the next piece instead
+- FR-60: If a piece is already held, pressing hold swaps the active piece with the held piece
+- FR-61: Hold can only be used once per piece drop — flag resets after the next piece spawns
+- FR-62: Hold piece is displayed in a dedicated panel in the UI (similar to next piece preview)
+- FR-63: Hold is triggered by C key on keyboard, or a dedicated touch button on mobile
+
 ## 3. Non-Functional Requirements
-- NFR-01: Runs in any modern browser (Chrome, Firefox, Edge, Safari)
+- NFR-01: Runs in any modern browser (Chrome, Firefox, Edge, Safari) on desktop and mobile
 - NFR-02: No external game engines or heavyweight frameworks
 - NFR-03: No server-side dependencies — pure client-side
-- NFR-04: Responsive to keyboard input with no perceptible lag
+- NFR-04: Responsive to keyboard and touch input with no perceptible lag
 - NFR-05: Codebase under 2000 lines total
 - NFR-06: Code is readable and well-commented (learning project)
+- NFR-07: Playable on screens as small as 375px wide (iPhone SE) in portrait orientation (v3)
+- NFR-08: Touch targets meet minimum 44×44px accessibility guideline (v3)
 
 ## 4. Future Versions (Backlog)
 
@@ -120,10 +158,10 @@ A browser-based Tetris clone for learning purposes. Single player, no multiplaye
 - BL-11: Completing all levels reveals the full photo — acts as a win condition beyond endless play
 - BL-12: Photos can be bundled as a set or loaded from a configurable source
 
-### 4.2 Mobile App (see decisions.md D-04)
-- BL-13: Package game as native mobile app via Capacitor (iOS/Android)
-- BL-14: Add touch input handler — tap zones or swipe gestures for move/rotate/drop
-- BL-15: Responsive layout adapts to mobile screen sizes and orientations
+### 4.2 Native Mobile App (see decisions.md D-04)
+- BL-13: Package game as native mobile app via Capacitor (iOS/Android) — deferred until browser mobile is proven
+- BL-14: (Moved to v3 — FR-51 to FR-55)
+- BL-15: (Moved to v3 — FR-47 to FR-50)
 
 ### 4.3 Backend — Photo Library + Statistics (see decisions.md D-05)
 - BL-16: REST API to serve photos for the hidden photo mechanic (replaces local/bundled photos)
@@ -133,7 +171,5 @@ A browser-based Tetris clone for learning purposes. Single player, no multiplaye
 - BL-20: API authentication — player identity for statistics tracking
 
 ### 4.4 Other Backlog Items
-- Hold piece mechanic
-- Hard drop (instant placement)
 - Sound effects and line-clear animations
 - High score persistence (localStorage initially, then via API)

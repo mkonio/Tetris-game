@@ -1,5 +1,5 @@
 /* ============================================================
-   Tetris Game Styles
+   MK Tetris — Styles (v3: responsive + mobile)
    ============================================================ */
 
 * {
@@ -16,9 +16,16 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for mobile (FR-58) */
+    /* Mobile protections (FR-57) */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+    -webkit-touch-callout: none;
 }
 
-/* --- Game Layout --- */
+/* --- Game Layout — Desktop (default) --- */
 
 #game-container {
     display: flex;
@@ -48,6 +55,18 @@ body {
     margin-bottom: 8px;
 }
 
+#preview-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#stats-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 .ui-stat {
     display: flex;
     flex-direction: column;
@@ -61,7 +80,8 @@ body {
     letter-spacing: 2px;
 }
 
-#preview-canvas {
+#preview-canvas,
+#hold-canvas {
     border: 1px solid #444;
     background-color: #0f0f23;
     display: block;
@@ -75,7 +95,7 @@ body {
     color: #ffffff;
 }
 
-/* --- Controls Panel --- */
+/* --- Controls Panel (keyboard hints, desktop only) --- */
 
 #controls-panel {
     margin-top: 16px;
@@ -99,4 +119,120 @@ kbd {
     font-size: 11px;
     color: #e0e0e0;
     margin-right: 2px;
+}
+
+/* --- Touch Controls (FR-51 to FR-55, D-09) --- */
+
+#touch-controls {
+    display: none; /* Hidden by default — shown via JS on touch devices */
+    grid-template-columns: repeat(3, 1fr) 8px repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    gap: 8px;
+    padding: 12px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.touch-btn {
+    /* Minimum 44×44px per Apple HIG (FR-54) */
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 24px;
+    font-family: 'Courier New', monospace;
+    background: #2a2a4e;
+    color: #e0e0e0;
+    border: 2px solid #555;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.touch-btn:active {
+    background: #444;
+    border-color: #00d4ff;
+}
+
+.touch-btn-small {
+    font-size: 14px;
+}
+
+/* Touch button grid positions */
+#btn-left     { grid-column: 1; grid-row: 1; }
+#btn-down     { grid-column: 2; grid-row: 1; }
+#btn-right    { grid-column: 3; grid-row: 1; }
+#btn-rotate   { grid-column: 5; grid-row: 1; }
+#btn-hard-drop{ grid-column: 6; grid-row: 1; }
+#btn-hold     { grid-column: 7; grid-row: 1; }
+#btn-pause    { grid-column: 5 / 8; grid-row: 2; }
+
+/* ============================================================
+   Mobile Layout (< 600px) — FR-48
+   ============================================================ */
+
+@media (max-width: 599px) {
+    body {
+        align-items: flex-start;
+        padding: 8px 0 0 0;
+    }
+
+    #game-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    #game-canvas {
+        border-width: 1px;
+    }
+
+    /* UI panel becomes a horizontal bar below the canvas */
+    #ui-panel {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 8px 12px;
+        min-width: unset;
+        width: 100%;
+    }
+
+    #game-title {
+        display: none; /* Title visible on canvas start screen */
+    }
+
+    #preview-panels {
+        flex-direction: row;
+        gap: 12px;
+    }
+
+    #stats-row {
+        flex-direction: row;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .ui-stat {
+        align-items: center;
+    }
+
+    #score-display,
+    #level-display,
+    #lines-display {
+        font-size: 18px;
+    }
+
+    /* Hide keyboard hints on mobile */
+    #controls-panel {
+        display: none;
+    }
+
+    /* Touch controls become visible */
+    #touch-controls {
+        align-self: center;
+    }
 }

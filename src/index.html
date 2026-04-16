@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>MK Tetris</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -11,30 +12,51 @@
         <canvas id="game-canvas"></canvas>
         <div id="ui-panel">
             <h1 id="game-title">MK TETRIS</h1>
-            <div class="ui-stat">
-                <span class="ui-label">Next</span>
-                <canvas id="preview-canvas" width="120" height="120"></canvas>
+            <div id="preview-panels">
+                <div class="ui-stat">
+                    <span class="ui-label">Next</span>
+                    <canvas id="preview-canvas" width="120" height="120"></canvas>
+                </div>
+                <div class="ui-stat">
+                    <span class="ui-label">Hold</span>
+                    <canvas id="hold-canvas" width="120" height="120"></canvas>
+                </div>
             </div>
-            <div class="ui-stat">
-                <span class="ui-label">Score</span>
-                <span id="score-display">0</span>
-            </div>
-            <div class="ui-stat">
-                <span class="ui-label">Level</span>
-                <span id="level-display">1</span>
-            </div>
-            <div class="ui-stat">
-                <span class="ui-label">Lines</span>
-                <span id="lines-display">0</span>
+            <div id="stats-row">
+                <div class="ui-stat">
+                    <span class="ui-label">Score</span>
+                    <span id="score-display">0</span>
+                </div>
+                <div class="ui-stat">
+                    <span class="ui-label">Level</span>
+                    <span id="level-display">1</span>
+                </div>
+                <div class="ui-stat">
+                    <span class="ui-label">Lines</span>
+                    <span id="lines-display">0</span>
+                </div>
             </div>
             <div id="controls-panel">
                 <span class="ui-label">Controls</span>
                 <div class="key-binding"><kbd>&larr;</kbd><kbd>&rarr;</kbd> Move</div>
                 <div class="key-binding"><kbd>&darr;</kbd> Soft drop</div>
                 <div class="key-binding"><kbd>&uarr;</kbd> Rotate</div>
+                <div class="key-binding"><kbd>Space</kbd> Hard drop</div>
+                <div class="key-binding"><kbd>C</kbd> Hold</div>
                 <div class="key-binding"><kbd>P</kbd> / <kbd>Esc</kbd> Pause</div>
                 <div class="key-binding"><kbd>Enter</kbd> Start</div>
             </div>
+        </div>
+
+        <!-- Touch controls — shown only on touch devices (FR-51 to FR-55) -->
+        <div id="touch-controls">
+            <button id="btn-left" class="touch-btn" aria-label="Move left">&#9664;</button>
+            <button id="btn-down" class="touch-btn" aria-label="Soft drop">&#9660;</button>
+            <button id="btn-right" class="touch-btn" aria-label="Move right">&#9654;</button>
+            <button id="btn-rotate" class="touch-btn" aria-label="Rotate">&#10227;</button>
+            <button id="btn-hard-drop" class="touch-btn" aria-label="Hard drop">&#9947;</button>
+            <button id="btn-hold" class="touch-btn" aria-label="Hold piece">H</button>
+            <button id="btn-pause" class="touch-btn touch-btn-small" aria-label="Pause">&#10074;&#10074;</button>
         </div>
     </div>
     <script src="js/game-logic.js"></script>
