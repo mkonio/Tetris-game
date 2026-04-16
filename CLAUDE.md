@@ -32,7 +32,7 @@ A browser-based Tetris clone built as a learning project. The goal is to learn C
 
 ## Commands
 - **Run game:** Open `src/index.html` in browser (no build step)
-- **Run tests:** TBD — lightweight test runner to be selected
+- **Run tests:** Open `tests/tests.html` in browser (no build step)
 
 ## Key References
 - Requirements & game rules: `docs/requirements.md`
@@ -45,4 +45,6 @@ A browser-based Tetris clone built as a learning project. The goal is to learn C
 - Break work into small, testable increments
 - When uncertain about game mechanics, ask — don't assume
 - Always explain *what* you're doing and *why* (this is a learning project)
+- After every code change: verify smoke tests pass (open `tests/tests.html`) before considering the change done
+- New features must include tests — add to `tests/game-logic.test.js` for logic, `tests/smoke.test.js` for integration
 - Save all deliverables to the project folder

@@ -1,4 +1,6 @@
-/* Tetris Game Styles */
+/* ============================================================
+   Tetris Game Styles
+   ============================================================ */
 
 * {
     margin: 0;
@@ -16,21 +18,52 @@ body {
     min-height: 100vh;
 }
 
+/* --- Game Layout --- */
+
 #game-container {
     display: flex;
-    gap: 20px;
+    gap: 24px;
     align-items: flex-start;
 }
 
 #game-canvas {
     border: 2px solid #444;
-    background-color: #0f0f23;
+    display: block;
 }
+
+/* --- UI Panel --- */
 
 #ui-panel {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 10px;
-    font-size: 18px;
+    gap: 16px;
+    padding: 16px;
+    min-width: 120px;
+}
+
+#game-title {
+    font-size: 28px;
+    color: #00d4ff;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+}
+
+.ui-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ui-label {
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+#score-display,
+#level-display,
+#lines-display {
+    font-size: 22px;
+    color: #ffffff;
 }

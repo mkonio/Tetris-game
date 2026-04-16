@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris — Tests</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 24px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        h1 { color: #00d4ff; }
+        h2 { margin-top: 24px; }
+        h3 { color: #888; margin-top: 16px; }
+        .pass { color: #00f000; padding: 2px 0; }
+        .fail { color: #f00000; padding: 4px 0; }
+        .fail small { color: #ff8888; }
+    </style>
+</head>
+<body>
+    <h1>Tetris Game — Tests</h1>
+    <div id="test-results">Running tests...</div>
+
+    <script src="../src/js/game-logic.js"></script>
+    <script src="test-runner.js"></script>
+    <script src="game-logic.test.js"></script>
+    <script src="smoke.test.js"></script>
+</body>
+</html>
